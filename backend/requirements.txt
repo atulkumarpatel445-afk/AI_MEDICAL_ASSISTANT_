@@ -1,0 +1,10 @@
+flask
+google-genai
+langchain
+langchain-community
+chromadb
+sentence-transformers
+pandas
+numpy
+requests
+gunicorn
