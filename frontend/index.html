@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>AI Medical Assistant</title>
+
+    <link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+    <div class="container">
+    <div class="logo">  </div>
+        <h1>🏥 AI Medical Assistant</h1>
+
+        <textarea
+            id="question"
+            placeholder="Ask your medical question..."
+        ></textarea>
+
+        <div class="buttons">
+
+            <button onclick="askAI()">
+                Ask AI
+            </button>
+
+            <button onclick="startVoice()">
+                🎤 Speak
+            </button>
+
+        </div>
+
+        <div id="loading">
+            Thinking...
+        </div>
+
+        <div id="answer">
+
+        </div>
+
+    </div>
+    <div class="report-section">
+
+        <h2>📄 Medical Report Analysis</h2>
+
+        <label for="reportFile">Upload medical report</label>
+        <input
+            type="file"
+            id="reportFile"
+            accept=".pdf,.jpg,.jpeg,.png"
+            title="Upload medical report (PDF or image)"
+            aria-label="Upload medical report"
+        >
+
+        <button onclick="analyzeReport()">
+            Analyze Report
+        </button>
+
+        <div id="reportResult"></div>
+
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>
