@@ -3,8 +3,11 @@ flask-cors
 google-genai
 langchain
 langchain-community
+langchain-huggingface
 chromadb
 sentence-transformers
+faiss-cpu
+pypdf
 pandas
 numpy
 requests
