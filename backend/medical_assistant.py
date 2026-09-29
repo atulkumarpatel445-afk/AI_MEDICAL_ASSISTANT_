@@ -1,22 +1,35 @@
 from rag import retrieve
 from search import search_web
-from google import genai
 import os
 
 # Gemini API Key (read from environment variable `GENAI_API_KEY`)
-# Falls back to a literal value if the env var is not set.
-api_key=os.getenv("GENAI_API_KEY")
-client = genai.Client(api_key=api_key)
+api_key = os.getenv("GENAI_API_KEY")
 
-# Generate response using Gemini
-def generate_answer(prompt):
+# Try to import Google GenAI client. If unavailable, provide a safe fallback.
+try:
+    from google import genai
 
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=prompt
-    )
+    client = genai.Client(api_key=api_key)
 
-    return response.text
+    def generate_answer(prompt):
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt
+        )
+        # Some client responses expose `text`, others may stringify.
+        return getattr(response, "text", str(response))
+
+except Exception as e:
+    print(f"google genai import/config failed: {e}. Falling back to web-only responder.")
+
+    def generate_answer(prompt):
+        # Fallback: perform a web search and return a brief aggregated placeholder.
+        try:
+            web_results = search_web(prompt)
+            snippets = [str(r) for r in web_results[:3]]
+            return "Fallback (GenAI not configured). Top web snippets:\n" + "\n- " + "\n- ".join(snippets)
+        except Exception:
+            return "GenAI not configured and web search failed."
 
 
 # Main function

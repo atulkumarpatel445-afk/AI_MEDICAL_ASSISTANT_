@@ -1,144 +1,156 @@
-async function askAI(){
+async function askAI() {
 
-    let question =
-    document.getElementById(
-        "question"
-    ).value;
+    let question = document.getElementById("question").value;
 
-    if(question===""){
-
+    if (question === "") {
         alert("Enter a question");
-
         return;
     }
 
-    document.getElementById(
-        "loading"
-    ).style.display="block";
+    document.getElementById("loading").style.display = "block";
 
-    try{
+    try {
 
-        let response =
-        await fetch(
+        let response = await fetch(
             "http://127.0.0.1:5000/chat",
             {
-
-                method:"POST",
-
-                headers:{
-                    "Content-Type":"application/json"
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
                 },
-
-                body:JSON.stringify({
-
-                    question:question
-
+                body: JSON.stringify({
+                    question: question
                 })
-
             }
         );
 
-        let data =
-        await response.json();
+        let data;
 
-        document.getElementById(
-            "loading"
-        ).style.display="none";
+        // Handle non-2xx responses gracefully
+        if (response.ok) {
+            data = await response.json();
+        } else {
+            // Try parsing JSON error, otherwise read plain text
+            try {
+                data = await response.json();
+            } catch (e) {
+                const text = await response.text();
+                data = { error: text || `HTTP ${response.status}` };
+            }
+        }
 
-        document.getElementById(
-            "answer"
-        ).innerHTML =
-        data.answer;
+        console.log("Backend Response:", response.status, data);
 
-        speak(data.answer);
+        document.getElementById("loading").style.display = "none";
 
-    }
+        if (!response.ok) {
+            const err = data.error || data.message || `HTTP ${response.status}`;
+            document.getElementById("answer").innerHTML = `Error: ${err}`;
+            return;
+        }
 
-    catch(error){
+        let answer =
+            data.answer ||
+            data.response ||
+            data.result ||
+            data.message ||
+            "No answer received";
 
-        document.getElementById(
-            "loading"
-        ).style.display="none";
+        document.getElementById("answer").innerHTML = answer;
 
-        document.getElementById(
-            "answer"
-        ).innerHTML =
-        "Error connecting backend";
+        speak(answer);
+
+    } catch (error) {
+
+        console.error(error);
+
+        document.getElementById("loading").style.display = "none";
+
+        document.getElementById("answer").innerHTML =
+            "Error connecting backend";
     }
 }
 
-function startVoice(){
+function startVoice() {
 
-    const recognition =
-    new webkitSpeechRecognition();
+    const recognition = new webkitSpeechRecognition();
 
-    recognition.lang =
-    "en-US";
+    recognition.lang = "en-US";
 
     recognition.start();
 
-    recognition.onresult =
-    function(event){
+    recognition.onresult = function (event) {
 
-        let text =
-        event.results[0][0].transcript;
+        let text = event.results[0][0].transcript;
 
-        document.getElementById(
-            "question"
-        ).value = text;
+        document.getElementById("question").value = text;
 
         askAI();
     };
 }
 
-function speak(text){
+function speak(text) {
 
-    let speech =
-    new SpeechSynthesisUtterance(
-        text
-    );
+    let speech = new SpeechSynthesisUtterance(text);
 
-    speech.lang =
-    "en-US";
+    speech.lang = "en-US";
 
-    window.speechSynthesis.speak(
-        speech
-    );
+    window.speechSynthesis.speak(speech);
 }
-async function analyzeReport(){
 
-    const file =
-    document.getElementById(
-        "reportFile"
-    ).files[0];
+async function analyzeReport() {
 
-    if(!file){
+    const file = document.getElementById("reportFile").files[0];
+
+    if (!file) {
         alert("Please select a report");
         return;
     }
 
-    let formData =
-    new FormData();
+    let formData = new FormData();
 
-    formData.append(
-        "file",
-        file
-    );
+    formData.append("file", file);
 
-    let response =
-    await fetch(
-        "http://127.0.0.1:5000/analyze-report",
-        {
-            method:"POST",
-            body:formData
+    try {
+
+        let response = await fetch(
+            "http://127.0.0.1:5000/analyze-report",
+            {
+                method: "POST",
+                body: formData
+            }
+        );
+
+        let data;
+        if (response.ok) {
+            data = await response.json();
+        } else {
+            try {
+                data = await response.json();
+            } catch (e) {
+                const text = await response.text();
+                data = { error: text || `HTTP ${response.status}` };
+            }
         }
-    );
 
-    let data =
-    await response.json();
+        console.log("Report Response:", response.status, data);
 
-    document.getElementById(
-        "reportResult"
-    ).innerHTML =
-    data.analysis;
+        if (!response.ok) {
+            document.getElementById("reportResult").innerHTML = `Error: ${data.error || 'Request failed'}`;
+            return;
+        }
+
+        document.getElementById("reportResult").innerHTML =
+            data.analysis ||
+            data.result ||
+            data.message ||
+            "No analysis received";
+
+    } catch (error) {
+
+        console.error(error);
+
+        document.getElementById("reportResult").innerHTML =
+            "Error analyzing report";
+    }
 }
